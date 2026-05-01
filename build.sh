@@ -21,15 +21,19 @@ for PATCH in "${PATCHES[@]}"; do
     fi
 done
 
-# On Git Bash for Windows (MSYS), /usr/bin/link.exe (a GNU coreutils
-# program) shadows MSVC's link.exe in PATH. Rust resolves link.exe via
-# PATH and ends up with the wrong one. Delegate cargo to cmd.exe so it
-# inherits the cmd PATH ordering where MSVC's link.exe wins.
-if [[ -n "${MSYSTEM:-}" ]]; then
-    cmd //c "cd emglken && cargo build --release -p remglk_capi"
-else
-    (cd emglken && cargo build --release -p remglk_capi)
+# On Git Bash for Windows (MSYSTEM is set), /usr/bin/link.exe (a GNU
+# coreutils utility — *not* a linker) shadows MSVC's link.exe in PATH.
+# Move MSVC's bin dir to the front so every PATH lookup (cargo,
+# ninja, cl.exe, link.exe) resolves to the right tools.
+if [[ -n "${MSYSTEM:-}" && -n "${VCToolsInstallDir:-}" ]]; then
+    MSVC_BIN_UNIX=$(cygpath -u "${VCToolsInstallDir}bin\\Hostx64\\x64" 2>/dev/null || true)
+    if [[ -n "$MSVC_BIN_UNIX" ]]; then
+        export PATH="$MSVC_BIN_UNIX:$PATH"
+        echo "Prepended MSVC bin to PATH: $MSVC_BIN_UNIX"
+    fi
 fi
+
+(cd emglken && cargo build --release -p remglk_capi)
 
 # On Windows, prefer Ninja so output lands flat in build/ (instead of build/Release/).
 CMAKE_FLAGS=()
