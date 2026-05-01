@@ -23,9 +23,15 @@ done
 
 (cd emglken && cargo build --release -p remglk_capi)
 
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+# On Windows, prefer Ninja so output lands flat in build/ instead of build/Release/.
+CMAKE_FLAGS=()
+case "${OSTYPE:-}" in
+    msys*|cygwin*|win32) CMAKE_FLAGS+=(-G Ninja) ;;
+esac
+
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release "${CMAKE_FLAGS[@]}"
 cmake --build build -j
 
 echo
 echo "Built binaries in build/:"
-ls build | grep -v -E '^(CMake|cmake|Makefile|.*\.a$)'
+ls build | grep -v -E '^(CMake|cmake|Makefile|.*\.(a|lib|exp|pdb|ninja)$|build\.ninja)'

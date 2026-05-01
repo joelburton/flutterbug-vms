@@ -16,7 +16,11 @@ else()
     set(REMGLK_RS_LIB_FOLDER ${EMGLKEN_ROOT}/target/debug)
 endif()
 
-set(REMGLK_RS_LIB ${REMGLK_RS_LIB_FOLDER}/libremglk_capi.a)
+# Static lib filename differs by toolchain: libremglk_capi.a on Unix,
+# remglk_capi.lib on MSVC. CMAKE_STATIC_LIBRARY_PREFIX/SUFFIX gives the
+# right pair for the host toolchain.
+set(REMGLK_RS_LIB
+    ${REMGLK_RS_LIB_FOLDER}/${CMAKE_STATIC_LIBRARY_PREFIX}remglk_capi${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(GLK_HEADERS ${EMGLKEN_ROOT}/remglk/remglk_capi/src/glk)
 
 function(add_sources target dir)
@@ -36,9 +40,14 @@ function(emglken_native_vm target)
         target_link_libraries(${target} PRIVATE
             "-framework CoreFoundation"
             "-framework Security"
-        )
+            pthread dl m)
+    elseif(WIN32)
+        # System libraries the Rust standard library expects on MSVC.
+        target_link_libraries(${target} PRIVATE
+            ws2_32 userenv ntdll bcrypt advapi32 kernel32 user32)
+    else()
+        target_link_libraries(${target} PRIVATE pthread dl m)
     endif()
-    target_link_libraries(${target} PRIVATE pthread dl m)
 endfunction()
 
 add_executable(glulxe)

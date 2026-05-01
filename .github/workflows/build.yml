@@ -84,6 +84,60 @@ jobs:
             build/tads
           if-no-files-found: error
 
+  windows-x86_64:
+    name: Windows x86_64
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Activate MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v4
+
+      - name: Install zlib via vcpkg
+        run: vcpkg install zlib:x64-windows
+
+      - name: Toolchain versions
+        run: |
+          rustc --version
+          cargo --version
+          cmake --version
+          ninja --version
+          python --version
+
+      - name: Build all VMs
+        run: |
+          export CMAKE_TOOLCHAIN_FILE="$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+          export VCPKG_TARGET_TRIPLET=x64-windows
+          ./build.sh
+
+      - name: Smoke test
+        run: python tests/test_smoke.py
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v5
+        with:
+          name: flutterbug-vms-windows-x86_64
+          path: |
+            build/glulxe.exe
+            build/git.exe
+            build/bocfel.exe
+            build/bocfel-noz6.exe
+            build/hugo.exe
+            build/scare.exe
+            build/tads.exe
+          if-no-files-found: error
+
   linux-arm64:
     name: Linux arm64
     runs-on: ubuntu-22.04-arm
