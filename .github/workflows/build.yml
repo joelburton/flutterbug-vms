@@ -6,16 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   macos-arm64:
     name: macOS arm64
     runs-on: macos-14
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -34,7 +31,7 @@ jobs:
         run: python3 tests/test_smoke.py
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: flutterbug-vms-darwin-arm64
           path: |
@@ -52,7 +49,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -74,7 +71,7 @@ jobs:
         run: python3 tests/test_smoke.py
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: flutterbug-vms-linux-x86_64
           path: |
@@ -92,7 +89,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -114,7 +111,7 @@ jobs:
         run: python3 tests/test_smoke.py
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: flutterbug-vms-linux-arm64
           path: |
