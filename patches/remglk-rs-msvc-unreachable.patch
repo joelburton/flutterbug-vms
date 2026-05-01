@@ -1,0 +1,16 @@
+diff --git a/remglk_capi/src/glk/support.c b/remglk_capi/src/glk/support.c
+index 7e52b42..9146372 100644
+--- a/remglk_capi/src/glk/support.c
++++ b/remglk_capi/src/glk/support.c
+@@ -24,7 +24,11 @@ gidispatch_rock_t gidispatch_get_objrock(void *obj, glui32 objclass) {
+         case gidisp_Class_Window:
+             return gidispatch_get_objrock_window(obj);
+         default:
++#if defined(_MSC_VER)
++            __assume(0);
++#else
+             __builtin_unreachable();
++#endif
+     }
+ }
+ 

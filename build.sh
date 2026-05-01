@@ -10,6 +10,7 @@ REMGLK_DIR="emglken/remglk"
 PATCHES=(
     "patches/remglk-rs-window-arrangement-lock.patch"
     "patches/remglk-rs-c-char-signedness.patch"
+    "patches/remglk-rs-msvc-unreachable.patch"
 )
 
 for PATCH in "${PATCHES[@]}"; do

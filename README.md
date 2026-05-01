@@ -52,6 +52,7 @@ Two local fixes are applied to `remglk-rs` at build time. Both are real bugs ups
 
 - `patches/remglk-rs-window-arrangement-lock.patch` — `glk_window_set_arrangement` holds a `try_lock` on `keywin` while walking up the parent chain, deadlocking on the first iteration when `keywin` is itself the descendant being walked. Bocfel triggers this on startup. Masked in wasm builds by emscripten's single-threaded mutex semantics.
 - `patches/remglk-rs-c-char-signedness.patch` — a handful of FFI signatures use `*const i8` instead of `*const c_char`. On platforms where `c_char` is unsigned (notably aarch64 Linux), this fails to compile. The fix is to use `c_char` so the type follows the platform.
+- `patches/remglk-rs-msvc-unreachable.patch` — `support.c` calls `__builtin_unreachable()` directly, which only exists on GCC/Clang. Add an `#ifdef _MSC_VER` branch using `__assume(0)` so MSVC builds.
 
 ## Limitations
 
