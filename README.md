@@ -48,7 +48,10 @@ with VMRunner("story.ulx") as vm:
 
 ## Patches
 
-`patches/remglk-rs-window-arrangement-lock.patch` fixes a `try_lock` deadlock in `glk_window_set_arrangement` that bocfel triggers on startup. The bug exists upstream but is masked by emscripten's mutex semantics in the wasm builds. Once it's PR'd and merged into curiousdannii/remglk-rs, this patch can be dropped.
+Two local fixes are applied to `remglk-rs` at build time. Both are real bugs upstream and worth PR'ing back to curiousdannii/remglk-rs; once they land, the patches can be dropped.
+
+- `patches/remglk-rs-window-arrangement-lock.patch` — `glk_window_set_arrangement` holds a `try_lock` on `keywin` while walking up the parent chain, deadlocking on the first iteration when `keywin` is itself the descendant being walked. Bocfel triggers this on startup. Masked in wasm builds by emscripten's single-threaded mutex semantics.
+- `patches/remglk-rs-c-char-signedness.patch` — a handful of FFI signatures use `*const i8` instead of `*const c_char`. On platforms where `c_char` is unsigned (notably aarch64 Linux), this fails to compile. The fix is to use `c_char` so the type follows the platform.
 
 ## Limitations
 

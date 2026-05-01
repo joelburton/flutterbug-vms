@@ -1,0 +1,99 @@
+diff --git a/remglk_capi/src/common.rs b/remglk_capi/src/common.rs
+index 9b67cef..4cb2186 100644
+--- a/remglk_capi/src/common.rs
++++ b/remglk_capi/src/common.rs
+@@ -10,7 +10,7 @@ https://github.com/curiousdannii/remglk-rs
+ */
+ 
+ use core::slice;
+-use std::ffi::CStr;
++use std::ffi::{c_char, CStr};
+ use std::ptr;
+ use std::sync::{Arc, Mutex};
+ 
+@@ -111,7 +111,7 @@ where T: Clone {
+     unsafe {slice::from_raw_parts_mut(buf, buflen as usize)}
+ }
+ 
+-pub fn cstring_u8<'a>(buf: *const i8) -> &'a [u8] {
++pub fn cstring_u8<'a>(buf: *const c_char) -> &'a [u8] {
+     unsafe {CStr::from_ptr(buf).to_bytes()}
+ }
+ 
+diff --git a/remglk_capi/src/glkapi.rs b/remglk_capi/src/glkapi.rs
+index f09662f..c29fc1a 100644
+--- a/remglk_capi/src/glkapi.rs
++++ b/remglk_capi/src/glkapi.rs
+@@ -9,7 +9,7 @@ https://github.com/curiousdannii/remglk-rs
+ 
+ */
+ 
+-use std::ffi::{CStr, c_void};
++use std::ffi::{c_char, CStr, c_void};
+ use std::sync::{Mutex};
+ 
+ use remglk::glkapi;
+@@ -22,7 +22,7 @@ type BufferU8Ptr = *const u8;
+ type BufferU32Ptr = *const u32;
+ type BufferMutU8Ptr = *mut u8;
+ type BufferMutU32Ptr = *mut u32;
+-type CStringU8Ptr = *const i8;
++type CStringU8Ptr = *const c_char;
+ type CStringU32Ptr = *const u32;
+ pub type FileRefPtr = *const Mutex<GlkObjectMetadata<GlkFileRef>>;
+ pub type SchannelPtr = *const Mutex<GlkObjectMetadata<GlkSoundChannel>>;
+@@ -137,7 +137,7 @@ pub extern "C" fn glk_exit() {
+ }
+ 
+ #[no_mangle]
+-pub extern "C" fn glk_fileref_create_by_name(usage: u32, filename_ptr: *const i8, rock: u32) -> FileRefPtr {
++pub extern "C" fn glk_fileref_create_by_name(usage: u32, filename_ptr: *const c_char, rock: u32) -> FileRefPtr {
+     let filename_cstr = unsafe {CStr::from_ptr(filename_ptr)};
+     let filename = filename_cstr.to_string_lossy().to_string();
+     let result = GLKAPI.lock().unwrap().glk_fileref_create_by_name(usage, filename, rock);
+diff --git a/remglk_capi/src/glkstart.rs b/remglk_capi/src/glkstart.rs
+index 5a4caa9..f3bfcd1 100644
+--- a/remglk_capi/src/glkstart.rs
++++ b/remglk_capi/src/glkstart.rs
+@@ -207,7 +207,7 @@ unsafe fn glkunix_arguments() -> Vec<GlkUnixArgument> {
+ }
+ 
+ #[no_mangle]
+-pub extern "C" fn glkunix_fileref_create_by_name_uncleaned(usage: u32, filename_ptr: *const i8, rock: u32) -> FileRefPtr {
++pub extern "C" fn glkunix_fileref_create_by_name_uncleaned(usage: u32, filename_ptr: *const c_char, rock: u32) -> FileRefPtr {
+     let filename_cstr = unsafe {CStr::from_ptr(filename_ptr)};
+     let filename = filename_cstr.to_string_lossy().to_string();
+     let result = GLKAPI.lock().unwrap().glkunix_fileref_create_by_name_uncleaned(usage, filename, rock);
+@@ -215,7 +215,7 @@ pub extern "C" fn glkunix_fileref_create_by_name_uncleaned(usage: u32, filename_
+ }
+ 
+ #[no_mangle]
+-pub extern "C" fn glkunix_fileref_get_filename(fileref: FileRefPtr) -> *const i8 {
++pub extern "C" fn glkunix_fileref_get_filename(fileref: FileRefPtr) -> *const c_char {
+     let fileref = from_ptr(fileref, "glkunix_fileref_get_filename");
+     let fileref = fileref.lock().unwrap();
+     let result = &fileref.path_c;
+@@ -229,7 +229,7 @@ pub extern "C" fn glkunix_set_base_file(filename_ptr: *const c_char) {
+ }
+ 
+ #[no_mangle]
+-pub extern "C" fn glkunix_stream_get_filename(str: StreamPtr) -> *const i8 {
++pub extern "C" fn glkunix_stream_get_filename(str: StreamPtr) -> *const c_char {
+     let str = from_ptr(str, "glkunix_stream_get_filename");
+     let str = str.lock().unwrap();
+     let result = str.file_path().unwrap();
+@@ -237,12 +237,12 @@ pub extern "C" fn glkunix_stream_get_filename(str: StreamPtr) -> *const i8 {
+ }
+ 
+ #[no_mangle]
+-pub extern "C" fn glkunix_stream_open_pathname(filename_ptr: *const i8, textmode: u32, rock: u32) -> StreamPtr {
++pub extern "C" fn glkunix_stream_open_pathname(filename_ptr: *const c_char, textmode: u32, rock: u32) -> StreamPtr {
+     glkunix_stream_open_pathname_gen(filename_ptr, 0, textmode, rock)
+ }
+ 
+ #[no_mangle]
+-pub extern "C" fn glkunix_stream_open_pathname_gen(filename_ptr: *const i8, writemode: u32, textmode: u32, rock: u32) -> StreamPtr {
++pub extern "C" fn glkunix_stream_open_pathname_gen(filename_ptr: *const c_char, writemode: u32, textmode: u32, rock: u32) -> StreamPtr {
+     // Remglk says this can only be called during glkunix_startup_code, but I don't think that's really necessary
+     let fileref = glkunix_fileref_create_by_name_uncleaned(fileusage_Data | if textmode > 0 {fileusage_TextMode} else {fileusage_BinaryMode}, filename_ptr, 0);
+     let fileref = reclaim(fileref, "glkunix_stream_open_pathname_gen");

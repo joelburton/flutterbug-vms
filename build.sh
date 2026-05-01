@@ -7,13 +7,19 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 REMGLK_DIR="emglken/remglk"
-PATCH="patches/remglk-rs-window-arrangement-lock.patch"
-if ! git -C "$REMGLK_DIR" apply --reverse --check "../../$PATCH" >/dev/null 2>&1; then
-    echo "Applying $PATCH"
-    git -C "$REMGLK_DIR" apply "../../$PATCH"
-else
-    echo "$PATCH already applied"
-fi
+PATCHES=(
+    "patches/remglk-rs-window-arrangement-lock.patch"
+    "patches/remglk-rs-c-char-signedness.patch"
+)
+
+for PATCH in "${PATCHES[@]}"; do
+    if ! git -C "$REMGLK_DIR" apply --reverse --check "../../$PATCH" >/dev/null 2>&1; then
+        echo "Applying $PATCH"
+        git -C "$REMGLK_DIR" apply "../../$PATCH"
+    else
+        echo "$PATCH already applied"
+    fi
+done
 
 (cd emglken && cargo build --release -p remglk_capi)
 
