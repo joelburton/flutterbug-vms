@@ -1,0 +1,19 @@
+diff --git a/remglk/src/glkapi/mod.rs b/remglk/src/glkapi/mod.rs
+index 573bb78..39ac706 100644
+--- a/remglk/src/glkapi/mod.rs
++++ b/remglk/src/glkapi/mod.rs
+@@ -1061,9 +1061,11 @@ where S: Default + GlkSystem {
+         if let WindowData::Pair(data) = &mut win.data {
+             // Check the keywin is valid
+             if let Some(keywin_glkobj) = keywin {
+-                let keywin = lock!(keywin_glkobj);
+-                if keywin.wintype == WindowType::Pair {
+-                    return Err(KeywinCantBePair);
++                {
++                    let keywin = lock!(keywin_glkobj);
++                    if keywin.wintype == WindowType::Pair {
++                        return Err(KeywinCantBePair);
++                    }
+                 }
+                 let mut win_parent = keywin_glkobj.downgrade();
+                 loop {

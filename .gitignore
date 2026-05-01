@@ -1,0 +1,7 @@
+build/
+emglken/target/
+*.pyc
+__pycache__/
+.venv/
+*.egg-info/
+.DS_Store

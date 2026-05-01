@@ -1,0 +1,3 @@
+[submodule "emglken"]
+	path = emglken
+	url = https://github.com/curiousdannii/emglken.git
