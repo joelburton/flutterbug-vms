@@ -1,0 +1,15 @@
+diff --git a/terps/scare/os_glk.c b/terps/scare/os_glk.c
+index f47c8711..0a5d3016 100644
+--- a/terps/scare/os_glk.c
++++ b/terps/scare/os_glk.c
+@@ -3572,9 +3572,8 @@ glkunix_startup_code (glkunix_startup_t * data)
+ /*---------------------------------------------------------------------*/
+ /*  Glk linkage relevant only to the Windows platform                  */
+ /*---------------------------------------------------------------------*/
+-#ifdef GARGLK
++/* Suppress the WinGlk-targeted block below; this build uses RemGlk. */
+ #undef _WIN32
+-#endif
+ 
+ #ifdef _WIN32
+ 

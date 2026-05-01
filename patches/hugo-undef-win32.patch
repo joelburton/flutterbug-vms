@@ -1,0 +1,17 @@
+diff --git a/source/heheader.h b/source/heheader.h
+index 4dad7f9..003a113 100644
+--- a/source/heheader.h
++++ b/source/heheader.h
+@@ -277,9 +277,9 @@ void arc_colour(unsigned char n, unsigned int c);
+ 
+ #include "glk.h"
+ 
+-#ifdef GARGLK
+-#undef WIN32 /* Gargoyle is not WinGlk */
+-#endif
++/* The GLK build does not use the Windows-native (WinGlk) frontend; suppress
++   any auto-defined WIN32 so heheader.h's WinGlk block doesn't activate. */
++#undef WIN32
+ 
+ #define PORT_NAME "Glk"
+ #define PORTER_NAME "Kent Tessman and Andrew Plotkin"

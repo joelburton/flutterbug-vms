@@ -6,17 +6,24 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-REMGLK_DIR="emglken/remglk"
+# Patches applied to vendored submodules. Each entry is "submodule:patch".
+# Patches are idempotent: skipped if already applied.
 PATCHES=(
-    "patches/remglk-rs-window-arrangement-lock.patch"
-    "patches/remglk-rs-c-char-signedness.patch"
-    "patches/remglk-rs-msvc-unreachable.patch"
+    "emglken/remglk:patches/remglk-rs-window-arrangement-lock.patch"
+    "emglken/remglk:patches/remglk-rs-c-char-signedness.patch"
+    "emglken/remglk:patches/remglk-rs-msvc-unreachable.patch"
+    "emglken/hugo:patches/hugo-undef-win32.patch"
+    "emglken/garglk:patches/scare-undef-win32.patch"
 )
 
-for PATCH in "${PATCHES[@]}"; do
-    if ! git -C "$REMGLK_DIR" apply --reverse --check "../../$PATCH" >/dev/null 2>&1; then
-        echo "Applying $PATCH"
-        git -C "$REMGLK_DIR" apply "../../$PATCH"
+for entry in "${PATCHES[@]}"; do
+    SUBMODULE="${entry%%:*}"
+    PATCH="${entry#*:}"
+    # Path to patch from inside the submodule directory.
+    REL_PATCH="$(python3 -c "import os; print(os.path.relpath('$PATCH', '$SUBMODULE'))")"
+    if ! git -C "$SUBMODULE" apply --reverse --check "$REL_PATCH" >/dev/null 2>&1; then
+        echo "Applying $PATCH to $SUBMODULE"
+        git -C "$SUBMODULE" apply "$REL_PATCH"
     else
         echo "$PATCH already applied"
     fi
