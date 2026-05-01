@@ -1,0 +1,45 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos-arm64:
+    name: macOS arm64
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Toolchain versions
+        run: |
+          rustc --version
+          cargo --version
+          cmake --version
+          clang --version
+          python3 --version
+
+      - name: Build all VMs
+        run: ./build.sh
+
+      - name: Smoke test
+        run: python3 tests/test_smoke.py
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutterbug-vms-darwin-arm64
+          path: |
+            build/glulxe
+            build/git
+            build/bocfel
+            build/bocfel-noz6
+            build/hugo
+            build/scare
+            build/tads
+          if-no-files-found: error
