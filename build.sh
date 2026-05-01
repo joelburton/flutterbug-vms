@@ -21,17 +21,27 @@ for PATCH in "${PATCHES[@]}"; do
     fi
 done
 
-(cd emglken && cargo build --release -p remglk_capi)
+# On Git Bash for Windows (MSYS), /usr/bin/link.exe (a GNU coreutils
+# program) shadows MSVC's link.exe in PATH. Rust resolves link.exe via
+# PATH and ends up with the wrong one. Delegate cargo to cmd.exe so it
+# inherits the cmd PATH ordering where MSVC's link.exe wins.
+if [[ -n "${MSYSTEM:-}" ]]; then
+    cmd //c "cd emglken && cargo build --release -p remglk_capi"
+else
+    (cd emglken && cargo build --release -p remglk_capi)
+fi
 
-# On Windows, prefer Ninja so output lands flat in build/ instead of build/Release/.
+# On Windows, prefer Ninja so output lands flat in build/ (instead of build/Release/).
 CMAKE_FLAGS=()
-case "${OSTYPE:-}" in
-    msys*|cygwin*|win32) CMAKE_FLAGS+=(-G Ninja) ;;
-esac
+if [[ -n "${MSYSTEM:-}" ]]; then
+    CMAKE_FLAGS+=(-G Ninja)
+fi
 
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release "${CMAKE_FLAGS[@]}"
+# `${arr[@]+"${arr[@]}"}` is the "expand if set, else nothing" idiom that
+# survives `set -u` on bash 3.2 (macOS) when the array is empty.
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release ${CMAKE_FLAGS[@]+"${CMAKE_FLAGS[@]}"}
 cmake --build build -j
 
 echo
 echo "Built binaries in build/:"
-ls build | grep -v -E '^(CMake|cmake|Makefile|.*\.(a|lib|exp|pdb|ninja)$|build\.ninja)'
+ls build | grep -v -E '^(CMake|cmake|Makefile|.*\.(a|lib|exp|pdb|ninja)$|build\.ninja|\.)' || true
