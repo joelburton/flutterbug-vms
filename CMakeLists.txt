@@ -57,7 +57,9 @@ add_sources(glulxe "${EMGLKEN_ROOT}/glulxe/"
     search.c serial.c string.c vm.c unixstrt.c unixautosave.c)
 emglken_native_vm(glulxe)
 target_compile_definitions(glulxe PRIVATE OS_UNIX)
-target_compile_options(glulxe PRIVATE -Wall -Wmissing-prototypes -Wno-unused)
+if(NOT MSVC)
+    target_compile_options(glulxe PRIVATE -Wall -Wmissing-prototypes -Wno-unused)
+endif()
 
 function(bocfel_common target)
     add_sources(${target} "${EMGLKEN_ROOT}/garglk/terps/bocfel/"
@@ -70,7 +72,10 @@ function(bocfel_common target)
     target_compile_definitions(${target} PRIVATE ZTERP_GLK ZTERP_GLK_BLORB
         ZTERP_GLK_NO_STDIO ZTERP_GLK_UNIX ZTERP_NO_OPTIONS
         "ZTERP_STATIC_PATCH_FILE=\"static-patches.h\"")
-    target_compile_options(${target} PRIVATE -Wall -fexceptions)
+    if(NOT MSVC)
+        # MSVC enables C++ exceptions through /EHsc by default.
+        target_compile_options(${target} PRIVATE -Wall -fexceptions)
+    endif()
 endfunction()
 
 add_executable(bocfel-noz6)
@@ -86,8 +91,14 @@ add_sources(git "${EMGLKEN_ROOT}/git/"
     memory.c opcodes.c operands.c peephole.c savefile.c saveundo.c
     search.c terp.c git_unix.c)
 emglken_native_vm(git)
-target_compile_definitions(git PRIVATE USE_DIRECT_THREADING USE_INLINE)
-target_compile_options(git PRIVATE -Wall -Wno-int-conversion -Wno-pointer-sign -Wno-unused-but-set-variable)
+if(MSVC)
+    # USE_DIRECT_THREADING relies on GCC's labels-as-values extension.
+    # Drop on MSVC; git's switch-based dispatch is the fallback.
+    target_compile_definitions(git PRIVATE USE_INLINE)
+else()
+    target_compile_definitions(git PRIVATE USE_DIRECT_THREADING USE_INLINE)
+    target_compile_options(git PRIVATE -Wall -Wno-int-conversion -Wno-pointer-sign -Wno-unused-but-set-variable)
+endif()
 
 add_executable(hugo)
 add_sources(hugo "${EMGLKEN_ROOT}/hugo/source/"
@@ -96,7 +107,9 @@ add_sources(hugo "${EMGLKEN_ROOT}/hugo/heglk/"
     SRCS heglk.c heglkunix.c)
 emglken_native_vm(hugo)
 target_compile_definitions(hugo PRIVATE COMPILE_V25 GLK NO_KEYPRESS_CURSOR "HUGO_INLINE=static inline")
-target_compile_options(hugo PRIVATE -Wall -Wno-unused-but-set-variable)
+if(NOT MSVC)
+    target_compile_options(hugo PRIVATE -Wall -Wno-unused-but-set-variable)
+endif()
 
 find_package(ZLIB)
 if(ZLIB_FOUND)
@@ -140,4 +153,6 @@ emglken_native_vm(tads)
 set_property(TARGET tads PROPERTY CXX_STANDARD 11)
 target_compile_definitions(tads PRIVATE EMGLKEN GLK GLK_TIMERS GLK_UNICODE NO_T2_COPYRIGHT_NOTICE
     OSNOUI_OMIT_OS_FPRINT OSNOUI_OMIT_OS_FPRINTZ RUNTIME TC_TARGET_T3 VMGLOB_STRUCT)
-target_compile_options(tads PRIVATE -Wno-deprecated-register -Wno-logical-not-parentheses -Wno-pointer-sign -Wno-string-concatenation)
+if(NOT MSVC)
+    target_compile_options(tads PRIVATE -Wno-deprecated-register -Wno-logical-not-parentheses -Wno-pointer-sign -Wno-string-concatenation)
+endif()
